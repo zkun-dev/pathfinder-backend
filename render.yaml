@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: pathfinder-backend
+    env: node
+    plan: free
+    buildCommand: pnpm install && pnpm run prisma:generate && pnpm run build
+    startCommand: pnpm run prisma:migrate deploy && node dist/app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: JWT_SECRET
+        sync: false  # 需要在 Render 控制台手动设置
+      - key: DATABASE_URL
+        sync: false  # 需要在 Render 控制台手动设置
+      - key: CORS_ORIGIN
+        sync: false  # 需要在 Render 控制台手动设置
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: UPLOAD_DIR
+        value: ./uploads
+      - key: MAX_FILE_SIZE
+        value: 104857600

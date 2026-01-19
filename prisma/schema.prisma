@@ -1,0 +1,124 @@
+// Prisma Schema for PathFinder Backend
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Profile {
+  id         Int      @id @default(autoincrement())
+  name       String
+  title      String
+  bio        String?  @db.Text
+  avatarUrl  String?
+  email      String?
+  phone      String?
+  location   String?
+  socialLinks Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+model Skill {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String?  // 前端/后端/工具等
+  proficiency Int?     @default(3) // 熟练度 1-5
+  icon        String?
+  description String?   @db.Text
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("skills")
+}
+
+model Project {
+  id         Int      @id @default(autoincrement())
+  title      String
+  description String?  @db.Text
+  content    String?   @db.Text // Markdown内容
+  coverImage String?
+  images     Json?     // JSON数组
+  techStack  Json?     // JSON数组
+  type       String?   // 工作项目/个人项目/开源项目
+  links      Json?     // JSON: {demo, github等}
+  featured   Boolean   @default(false)
+  startDate  DateTime?
+  endDate    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime? // 软删除
+
+  @@map("projects")
+}
+
+model Experience {
+  id          Int      @id @default(autoincrement())
+  companyName String
+  companyLogo String?
+  position    String
+  description String?  @db.Text
+  content     String?  @db.Text // Markdown内容
+  startDate   DateTime
+  endDate     DateTime?
+  achievements Json?   // JSON数组
+  techStack   Json?    // JSON数组
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // 软删除
+
+  @@map("experiences")
+}
+
+model Learning {
+  id         Int      @id @default(autoincrement())
+  title      String
+  description String? @db.Text
+  content    String?  @db.Text // Markdown内容
+  category   String?
+  tags       Json?    // JSON数组
+  resources  Json?    // JSON数组: 书籍、视频等
+  startDate  DateTime?
+  endDate    DateTime?
+  status     String?  @default("进行中") // 进行中/已完成
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime? // 软删除
+
+  @@map("learnings")
+}
+
+model Life {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String   @db.Text // Markdown内容
+  coverImage String?
+  images     Json?    // JSON数组
+  tags       Json?    // JSON数组
+  published  Boolean  @default(true)
+  views      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime? // 软删除
+
+  @@map("life")
+}
