@@ -5,7 +5,6 @@ import { parsePagination, createPaginationResponse } from '../utils/pagination.j
 import { validateId, parseBoolean } from '../utils/validation.js';
 import { buildQueryConditions } from '../utils/query.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { PrismaError } from '../types/index.js';
 
 const createLifeSchema = z.object({
   title: z.string().min(1, '标题不能为空'),
@@ -18,9 +17,11 @@ const createLifeSchema = z.object({
 
 const updateLifeSchema = createLifeSchema.partial();
 
+/**
+ * 获取生活动态列表
+ */
 export const getLifePosts = asyncHandler(async (req: Request, res: Response) => {
   const pagination = parsePagination(req.query as Record<string, string>, 10, 100);
-  
   const where = buildQueryConditions(req.query as Record<string, string>, {
     published: (value) => parseBoolean(value),
   });
@@ -38,21 +39,20 @@ export const getLifePosts = asyncHandler(async (req: Request, res: Response) => 
   res.json(createPaginationResponse(posts, total, pagination));
 });
 
+/**
+ * 获取生活动态详情
+ */
 export const getLifePost = asyncHandler(async (req: Request, res: Response) => {
   const id = validateId(req.params.id);
-
   const post = await prisma.life.findFirst({
-    where: {
-      id,
-      deletedAt: null,
-    },
+    where: { id, deletedAt: null },
   });
 
   if (!post) {
     return res.status(404).json({ error: '生活动态不存在' });
   }
 
-  // 增加阅读量（使用事务确保一致性）
+  // 增加阅读量
   const updated = await prisma.life.update({
     where: { id: post.id },
     data: { views: { increment: 1 } },
@@ -61,51 +61,36 @@ export const getLifePost = asyncHandler(async (req: Request, res: Response) => {
   res.json(updated);
 });
 
+/**
+ * 创建生活动态
+ */
 export const createLifePost = asyncHandler(async (req: Request, res: Response) => {
   const data = createLifeSchema.parse(req.body);
-
-  const post = await prisma.life.create({
-    data,
-  });
-
+  const post = await prisma.life.create({ data });
   res.status(201).json(post);
 });
 
+/**
+ * 更新生活动态
+ */
 export const updateLifePost = asyncHandler(async (req: Request, res: Response) => {
   const id = validateId(req.params.id);
   const data = updateLifeSchema.parse(req.body);
-
-  try {
-    const post = await prisma.life.update({
-      where: { id },
-      data,
-    });
-
-    res.json(post);
-  } catch (error) {
-    const prismaError = error as PrismaError;
-    if (prismaError.code === 'P2025') {
-      return res.status(404).json({ error: '生活动态不存在' });
-    }
-    throw error;
-  }
+  const post = await prisma.life.update({
+    where: { id },
+    data,
+  });
+  res.json(post);
 });
 
+/**
+ * 删除生活动态（软删除）
+ */
 export const deleteLifePost = asyncHandler(async (req: Request, res: Response) => {
   const id = validateId(req.params.id);
-
-  try {
-    await prisma.life.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-
-    res.json({ message: '删除成功' });
-  } catch (error) {
-    const prismaError = error as PrismaError;
-    if (prismaError.code === 'P2025') {
-      return res.status(404).json({ error: '生活动态不存在' });
-    }
-    throw error;
-  }
+  await prisma.life.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+  res.json({ message: '删除成功' });
 });

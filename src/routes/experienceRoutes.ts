@@ -8,7 +8,7 @@ import {
 } from '../controllers/experienceController.js';
 import { authenticate } from '../middleware/auth.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', getExperiences);
 router.get('/:id', getExperience);

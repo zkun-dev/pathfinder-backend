@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getProfile, updateProfile } from '../controllers/profileController.js';
 import { authenticate } from '../middleware/auth.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', getProfile);
 router.put('/', authenticate, updateProfile);

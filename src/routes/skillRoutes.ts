@@ -7,7 +7,7 @@ import {
 } from '../controllers/skillController.js';
 import { authenticate } from '../middleware/auth.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', getSkills);
 router.post('/', authenticate, createSkill);

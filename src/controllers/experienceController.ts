@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { validateId } from '../utils/validation.js';
 import { transformDateFields } from '../utils/date.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { PrismaError } from '../types/index.js';
 
 const createExperienceSchema = z.object({
   companyName: z.string().min(1, '公司名称不能为空'),
@@ -21,88 +20,70 @@ const createExperienceSchema = z.object({
 
 const updateExperienceSchema = createExperienceSchema.partial();
 
+/**
+ * 获取工作经历列表
+ */
 export const getExperiences = asyncHandler(async (_req: Request, res: Response) => {
-    const experiences = await prisma.experience.findMany({
-      where: { deletedAt: null },
-      orderBy: [
-        { sortOrder: 'asc' },
-        { startDate: 'desc' },
-      ],
-    });
-
-    res.json(experiences);
+  const experiences = await prisma.experience.findMany({
+    where: { deletedAt: null },
+    orderBy: [
+      { sortOrder: 'asc' },
+      { startDate: 'desc' },
+    ],
+  });
+  res.json(experiences);
 });
 
+/**
+ * 获取工作经历详情
+ */
 export const getExperience = asyncHandler(async (req: Request, res: Response) => {
   const id = validateId(req.params.id);
+  const experience = await prisma.experience.findFirst({
+    where: { id, deletedAt: null },
+  });
 
-    const experience = await prisma.experience.findFirst({
-      where: {
-      id,
-        deletedAt: null,
-      },
-    });
+  if (!experience) {
+    return res.status(404).json({ error: '工作经历不存在' });
+  }
 
-    if (!experience) {
-      return res.status(404).json({ error: '工作经历不存在' });
-    }
-
-    res.json(experience);
+  res.json(experience);
 });
 
+/**
+ * 创建工作经历
+ */
 export const createExperience = asyncHandler(async (req: Request, res: Response) => {
-    const data = createExperienceSchema.parse(req.body);
-
-  const experienceData: Record<string, unknown> = {
-      ...data,
-      startDate: new Date(data.startDate),
-      endDate: data.endDate ? new Date(data.endDate) : null,
-    };
-
-    const experience = await prisma.experience.create({
+  const data = createExperienceSchema.parse(req.body);
+  const experienceData = transformDateFields(data, ['startDate', 'endDate']);
+  const experience = await prisma.experience.create({
     data: experienceData as typeof data,
-    });
-
-    res.status(201).json(experience);
+  });
+  res.status(201).json(experience);
 });
 
+/**
+ * 更新工作经历
+ */
 export const updateExperience = asyncHandler(async (req: Request, res: Response) => {
   const id = validateId(req.params.id);
-    const data = updateExperienceSchema.parse(req.body);
-
+  const data = updateExperienceSchema.parse(req.body);
   const experienceData = transformDateFields(data, ['startDate', 'endDate']);
-
-  try {
-    const experience = await prisma.experience.update({
-      where: { id },
-      data: experienceData as typeof data,
-    });
-
-    res.json(experience);
-  } catch (error) {
-    const prismaError = error as PrismaError;
-    if (prismaError.code === 'P2025') {
-      return res.status(404).json({ error: '工作经历不存在' });
-    }
-    throw error;
-  }
+  const experience = await prisma.experience.update({
+    where: { id },
+    data: experienceData as typeof data,
+  });
+  res.json(experience);
 });
 
+/**
+ * 删除工作经历（软删除）
+ */
 export const deleteExperience = asyncHandler(async (req: Request, res: Response) => {
   const id = validateId(req.params.id);
-
-  try {
-    await prisma.experience.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-
-    res.json({ message: '删除成功' });
-  } catch (error) {
-    const prismaError = error as PrismaError;
-    if (prismaError.code === 'P2025') {
-      return res.status(404).json({ error: '工作经历不存在' });
-    }
-    throw error;
-  }
+  await prisma.experience.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+  res.json({ message: '删除成功' });
 });

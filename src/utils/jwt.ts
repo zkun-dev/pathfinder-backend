@@ -1,12 +1,15 @@
-import jwt, { SignOptions } from 'jsonwebtoken';
-import type { StringValue } from 'ms';
+import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
 
+/**
+ * 生成 JWT Token
+ */
 export const generateToken = (userId: number): string => {
   const secret: string = String(config.jwt.secret);
-  const options: SignOptions = {
-    expiresIn: config.jwt.expiresIn as StringValue,
-  };
   
-  return jwt.sign({ userId }, secret, options);
+  return jwt.sign(
+    { userId },
+    secret,
+    { expiresIn: config.jwt.expiresIn } as jwt.SignOptions
+  );
 };

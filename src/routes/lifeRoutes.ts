@@ -8,7 +8,7 @@ import {
 } from '../controllers/lifeController.js';
 import { authenticate } from '../middleware/auth.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', getLifePosts);
 router.get('/:id', getLifePost);

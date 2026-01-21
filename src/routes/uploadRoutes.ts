@@ -3,7 +3,7 @@ import { uploadFile, deleteFile } from '../controllers/uploadController.js';
 import { authenticate } from '../middleware/auth.js';
 import { upload } from '../utils/upload.js';
 
-const router = Router();
+const router: Router = Router();
 
 // 上传文件
 router.post('/', authenticate, upload.single('file'), uploadFile);

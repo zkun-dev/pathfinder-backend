@@ -18,7 +18,7 @@ import learningRoutes from './routes/learningRoutes.js';
 import lifeRoutes from './routes/lifeRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 
-const app = express();
+const app: express.Application = express();
 
 // 请求日志（最早添加，记录所有请求）
 app.use(requestLogger);

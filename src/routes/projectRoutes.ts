@@ -8,7 +8,7 @@ import {
 } from '../controllers/projectController.js';
 import { authenticate } from '../middleware/auth.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', getProjects);
 router.get('/:id', getProject);

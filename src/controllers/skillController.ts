@@ -3,7 +3,6 @@ import prisma from '../config/database.js';
 import { z } from 'zod';
 import { validateId } from '../utils/validation.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { PrismaError } from '../types/index.js';
 
 const createSkillSchema = z.object({
   name: z.string().min(1, '技能名称不能为空'),
@@ -16,6 +15,9 @@ const createSkillSchema = z.object({
 
 const updateSkillSchema = createSkillSchema.partial();
 
+/**
+ * 获取技能列表
+ */
 export const getSkills = asyncHandler(async (_req: Request, res: Response) => {
   const skills = await prisma.skill.findMany({
     orderBy: [
@@ -27,50 +29,30 @@ export const getSkills = asyncHandler(async (_req: Request, res: Response) => {
   res.json(skills);
 });
 
+/**
+ * 创建技能
+ */
 export const createSkill = asyncHandler(async (req: Request, res: Response) => {
   const data = createSkillSchema.parse(req.body);
-
-  const skill = await prisma.skill.create({
-    data,
-  });
-
+  const skill = await prisma.skill.create({ data });
   res.status(201).json(skill);
 });
 
+/**
+ * 更新技能
+ */
 export const updateSkill = asyncHandler(async (req: Request, res: Response) => {
   const id = validateId(req.params.id);
   const data = updateSkillSchema.parse(req.body);
-
-  try {
-    const skill = await prisma.skill.update({
-      where: { id },
-      data,
-    });
-
-    res.json(skill);
-  } catch (error) {
-    const prismaError = error as PrismaError;
-    if (prismaError.code === 'P2025') {
-      return res.status(404).json({ error: '技能不存在' });
-    }
-    throw error;
-  }
+  const skill = await prisma.skill.update({ where: { id }, data });
+  res.json(skill);
 });
 
+/**
+ * 删除技能
+ */
 export const deleteSkill = asyncHandler(async (req: Request, res: Response) => {
   const id = validateId(req.params.id);
-
-  try {
-    await prisma.skill.delete({
-      where: { id },
-    });
-
-    res.json({ message: '删除成功' });
-  } catch (error) {
-    const prismaError = error as PrismaError;
-    if (prismaError.code === 'P2025') {
-      return res.status(404).json({ error: '技能不存在' });
-    }
-    throw error;
-  }
+  await prisma.skill.delete({ where: { id } });
+  res.json({ message: '删除成功' });
 });

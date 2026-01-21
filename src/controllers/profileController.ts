@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import prisma from '../config/database.js';
 import { z } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { logger } from '../utils/logger.js';
 
 const updateProfileSchema = z.object({
   name: z.string().min(1).optional(),
@@ -15,43 +14,45 @@ const updateProfileSchema = z.object({
   socialLinks: z.any().optional(),
 });
 
+/**
+ * 获取个人信息
+ */
 export const getProfile = asyncHandler(async (_req: Request, res: Response) => {
-    let profile = await prisma.profile.findFirst();
+  let profile = await prisma.profile.findFirst();
 
-    if (!profile) {
-      // 创建默认profile
-      profile = await prisma.profile.create({
-        data: {
-          name: '未设置',
-          title: '未设置',
-        },
-      });
-    logger.info('创建默认个人信息');
-    }
+  if (!profile) {
+    profile = await prisma.profile.create({
+      data: {
+        name: '未设置',
+        title: '未设置',
+      },
+    });
+  }
 
-    res.json(profile);
+  res.json(profile);
 });
 
+/**
+ * 更新个人信息
+ */
 export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
-    const data = updateProfileSchema.parse(req.body);
+  const data = updateProfileSchema.parse(req.body);
+  let profile = await prisma.profile.findFirst();
 
-    let profile = await prisma.profile.findFirst();
+  if (profile) {
+    profile = await prisma.profile.update({
+      where: { id: profile.id },
+      data,
+    });
+  } else {
+    profile = await prisma.profile.create({
+      data: {
+        name: data.name || '未设置',
+        title: data.title || '未设置',
+        ...data,
+      },
+    });
+  }
 
-    if (profile) {
-      profile = await prisma.profile.update({
-        where: { id: profile.id },
-        data,
-      });
-    } else {
-      profile = await prisma.profile.create({
-        data: {
-          name: data.name || '未设置',
-          title: data.title || '未设置',
-          ...data,
-        },
-      });
-    logger.info('创建新的个人信息');
-    }
-
-    res.json(profile);
+  res.json(profile);
 });
