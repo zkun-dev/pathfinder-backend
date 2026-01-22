@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import prisma from '../config/database.js';
 import { generateToken } from '../utils/jwt.js';
 import { z } from 'zod';
@@ -26,7 +26,7 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response) => {
     return res.status(401).json({ error: '用户名或密码错误' });
   }
 
-  const isValid = await bcrypt.compare(password, user.password);
+  const isValid = bcrypt.compareSync(password, user.password);
   if (!isValid) {
     return res.status(401).json({ error: '用户名或密码错误' });
   }
@@ -44,7 +44,7 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response) => {
  */
 export const getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.userId;
-  
+
   if (!userId) {
     return res.status(401).json({ error: '未授权访问' });
   }
