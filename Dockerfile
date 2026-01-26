@@ -1,6 +1,9 @@
 # 使用官方 Node.js 18 镜像
 FROM node:18-alpine AS builder
 
+# 安装 OpenSSL（Prisma 需要）
+RUN apk add --no-cache openssl openssl-dev
+
 # 设置工作目录
 WORKDIR /app
 
@@ -27,6 +30,9 @@ RUN pnpm run prisma:generate
 
 # 生产镜像
 FROM node:18-alpine
+
+# 安装 OpenSSL（Prisma 需要）
+RUN apk add --no-cache openssl openssl-dev
 
 WORKDIR /app
 
