@@ -5,15 +5,24 @@ import { config } from '../config/index.js';
 import { FILE_UPLOAD } from './constants.js';
 import fs from 'fs';
 
-// 确保上传目录存在
-const uploadDir = config.upload.dir;
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// 获取上传目录（确保目录存在）
+function getUploadDir(): string {
+  const dir = config.upload.dir;
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
 }
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
+    try {
+      const uploadDir = getUploadDir();
+      cb(null, uploadDir);
+    } catch (error) {
+      console.error('Multer destination 错误:', error);
+      cb(error as Error, '');
+    }
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);

@@ -62,7 +62,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api', rateLimiter(100, 60000)); // 每分钟最多 100 次请求
 
 // 静态文件服务（上传的文件）
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(config.upload.dir));
 
 // API路由
 app.use('/api/auth', authRoutes);

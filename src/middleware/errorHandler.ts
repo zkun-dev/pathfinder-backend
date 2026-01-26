@@ -46,14 +46,22 @@ export const errorHandler = (
   }
 
   // Multer 文件上传错误
-  if (err.message && (err.message.includes('文件') || err.message.includes('LIMIT') || err.message.includes('Multer'))) {
+  if (err.message && (err.message.includes('文件') || err.message.includes('LIMIT') || err.message.includes('Multer') || err.name === 'MulterError')) {
     if (err.message.includes('LIMIT_FILE_SIZE') || err.message.includes('File too large')) {
       return res.status(400).json({ error: '文件大小超过限制，请选择更小的文件' });
     }
     if (err.message.includes('不支持的文件类型') || err.message.includes('File type')) {
       return res.status(400).json({ error: err.message });
     }
+    if (err.message.includes('Unexpected field')) {
+      return res.status(400).json({ error: '请使用字段名 "file" 上传文件' });
+    }
     return res.status(400).json({ error: '文件上传失败: ' + err.message });
+  }
+
+  // JSON 解析错误
+  if (err.name === 'SyntaxError' && err.message.includes('JSON')) {
+    return res.status(400).json({ error: '请求数据格式错误，请检查 JSON 格式' });
   }
 
   // 默认服务器错误
