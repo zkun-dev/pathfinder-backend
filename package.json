@@ -8,7 +8,7 @@
     "onlyBuiltDependencies": [
       "@prisma/client",
       "@prisma/engines",
-      "bcrypt",
+      "bcryptjs",
       "esbuild",
       "prisma"
     ],
@@ -26,9 +26,9 @@
     "prisma:studio": "prisma studio",
     "create-admin": "node scripts/create-admin.js",
     "check-env": "node scripts/check-env.js",
-    "setup-db": "node scripts/setup-database.js",
     "test-db": "node scripts/test-db-connection.js",
-    "diagnose": "node scripts/diagnose.js",
+    "migrate-tidb": "node scripts/migrate-to-tidb.js",
+    "verify-migration": "node scripts/verify-migration.js",
     "generate-secret": "node scripts/generate-secret.js",
     "deploy": "prisma migrate deploy && node dist/app.js",
     "postinstall": "prisma generate"
