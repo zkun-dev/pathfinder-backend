@@ -39,7 +39,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# 在生产阶段重新生成 Prisma Client（确保使用正确的二进制目标）
+RUN pnpm run prisma:generate
 
 # 创建上传目录
 RUN mkdir -p uploads
