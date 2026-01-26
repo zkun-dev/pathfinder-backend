@@ -117,10 +117,7 @@ pathfinder-backend/
 ├── scripts/                      # 工具脚本
 │   ├── create-admin.js           # 创建管理员账号脚本
 │   ├── check-env.js              # 检查环境变量脚本
-│   ├── diagnose.js               # 数据库诊断脚本
 │   ├── generate-secret.js        # 生成 JWT Secret 脚本
-│   ├── setup-database.js         # 数据库初始化脚本
-│   ├── start-mysql.ps1           # 启动 MySQL 服务（Windows）
 │   └── test-db-connection.js    # 测试数据库连接脚本
 ├── uploads/                      # 文件上传目录（自动创建）
 ├── .env                          # 环境变量配置（需自行创建）
@@ -249,61 +246,61 @@ pnpm run prisma:studio        # 打开 Prisma Studio
 # 工具脚本
 pnpm run create-admin         # 创建管理员账号
 pnpm run check-env            # 检查环境变量配置
-pnpm run diagnose             # 数据库诊断
+pnpm run test-db              # 测试数据库连接
+pnpm run generate-secret      # 生成 JWT Secret
 ```
 
-## 📦 部署
+## 📦 部署到 Railway
+
+### Railway 部署
+
+本项目使用 Railway 进行部署，支持自动部署和统一管理。
+
+**详细部署指南**：查看 [Railway-完整部署指南.md](../Railway-完整部署指南.md)
 
 ### 环境变量清单
 
-部署前确保配置以下环境变量：
+在 Railway Variables 中配置以下环境变量：
 
-- `NODE_ENV` - 环境模式（production/development）
-- `DATABASE_URL` - 数据库连接字符串
+- `DATABASE_URL` - MySQL 连接（使用引用：`${{MySQL.MYSQL_URL}}`）
 - `JWT_SECRET` - JWT 密钥（使用 `pnpm run generate-secret` 生成）
-- `PORT` - 服务端口
-- `CORS_ORIGIN` - 允许的前端域名
-- `UPLOAD_DIR` - 文件上传目录路径
+- `NODE_ENV` - 环境模式（`production`）
+- `CORS_ORIGIN` - 前端 Railway 域名
+- `UPLOAD_DIR` - 文件上传目录（`/tmp/uploads`）
 - `MAX_FILE_SIZE` - 最大文件大小（字节）
 
-### 部署步骤
+### 快速部署步骤
 
-1. **构建项目**
-   ```bash
-   pnpm run build
-   ```
+1. **创建 Railway 项目**
+   - 访问 https://railway.app
+   - 使用 GitHub 登录
+   - 创建新项目
 
-2. **运行数据库迁移**
-   ```bash
-   pnpm run prisma:migrate:deploy
-   ```
+2. **添加 MySQL 服务**
+   - New → Database → Add MySQL
+   - 记录服务名称（例如：`MySQL`）
 
-3. **启动服务**
-   ```bash
-   pnpm start
-   ```
+3. **部署后端**
+   - New → GitHub Repo → 选择 `pathfinder-backend`
+   - Railway 会自动检测 Dockerfile 并部署
 
-### 使用 PM2（推荐）
+4. **配置环境变量**
+   - 后端服务 → Variables
+   - 添加所有必需的环境变量
+   - `DATABASE_URL` 使用：`${{MySQL.MYSQL_URL}}`
 
-```bash
-# 安装 PM2
-npm install -g pm2
-
-# 启动应用
-pm2 start dist/app.js --name pathfinder-api
-
-# 设置开机自启
-pm2 save
-pm2 startup
-```
+5. **等待部署完成**
+   - 查看 Deployments 标签
+   - 确认部署成功
+   - 获取服务地址
 
 ## 🐛 常见问题
 
 ### 数据库连接失败
 
-- 检查 MySQL 服务是否运行
-- 验证 `DATABASE_URL` 配置是否正确
-- 运行 `pnpm run diagnose` 进行诊断
+- 检查 MySQL 服务是否运行（Railway MySQL 服务状态）
+- 验证 `DATABASE_URL` 配置是否正确（使用 `${{MySQL.MYSQL_URL}}`）
+- 运行 `pnpm run test-db` 测试连接
 
 ### 端口被占用
 

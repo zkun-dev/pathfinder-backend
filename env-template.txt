@@ -14,5 +14,7 @@ NODE_ENV=development
 UPLOAD_DIR=./uploads
 MAX_FILE_SIZE=104857600
 
-# CORS配置
+# CORS配置（多个源用逗号分隔）
+# Railway 部署时，前端地址会自动匹配 *.up.railway.app 域名
+# 本地开发时，localhost 会自动允许
 CORS_ORIGIN=http://localhost:3000

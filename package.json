@@ -27,8 +27,6 @@
     "create-admin": "node scripts/create-admin.js",
     "check-env": "node scripts/check-env.js",
     "test-db": "node scripts/test-db-connection.js",
-    "migrate-tidb": "node scripts/migrate-to-tidb.js",
-    "verify-migration": "node scripts/verify-migration.js",
     "generate-secret": "node scripts/generate-secret.js",
     "deploy": "prisma migrate deploy && node dist/app.js",
     "postinstall": "prisma generate"
