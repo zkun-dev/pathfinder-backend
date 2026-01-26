@@ -22,8 +22,18 @@ const app: express.Application = express();
 
 // 健康检查路由（最前面，不受任何中间件影响，确保 Railway 健康检查能通过）
 app.get('/health', (_req, res) => {
-  console.log('Health check requested');
+  console.log(`[健康检查] ${new Date().toISOString()} - Health check requested`);
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// 根路径测试路由（用于验证服务是否正常运行）
+app.get('/', (_req, res) => {
+  console.log(`[根路径] ${new Date().toISOString()} - Root path accessed`);
+  res.json({ 
+    message: 'Pathfinder Backend API', 
+    status: 'running',
+    timestamp: new Date().toISOString() 
+  });
 });
 
 // 请求日志（最早添加，记录所有请求）
@@ -153,14 +163,54 @@ app.use('/api/upload', uploadRoutes);
 app.use(errorHandler);
 
 // 启动服务器
-const PORT = config.port;
-// 监听 0.0.0.0 而不是 localhost，这样 Railway 才能从外部访问
-app.listen(PORT, '0.0.0.0', () => {
-  // 启动信息始终显示，无论环境如何
-  console.log(`\n🚀 服务器启动成功！`);
-  console.log(`📍 运行地址: http://0.0.0.0:${PORT}`);
-  console.log(`🌍 环境: ${config.nodeEnv}`);
-  console.log(`⏰ 启动时间: ${new Date().toLocaleString('zh-CN')}\n`);
-});
+// ⚠️ 重要：Railway 会自动设置 PORT 环境变量，必须使用它
+// 不要使用 config.port，直接使用 process.env.PORT
+const PORT = parseInt(process.env.PORT || '3001', 10);
+const HOST = '0.0.0.0'; // 监听所有网络接口，确保 Railway 可以访问
+
+console.log(`\n[启动] 准备启动服务器...`);
+console.log(`[启动] process.env.PORT: ${process.env.PORT || '未设置'}`);
+console.log(`[启动] 使用端口: ${PORT}`);
+console.log(`[启动] 监听地址: ${HOST}:${PORT}\n`);
+
+// 添加错误处理，确保启动失败时能看到错误信息
+try {
+  const server = app.listen(PORT, HOST, () => {
+    // 启动信息始终显示，无论环境如何
+    console.log(`\n🚀 服务器启动成功！`);
+    console.log(`📍 监听地址: ${HOST}:${PORT}`);
+    console.log(`🌍 环境: ${config.nodeEnv}`);
+    console.log(`⏰ 启动时间: ${new Date().toLocaleString('zh-CN')}`);
+    console.log(`🔗 健康检查: http://${HOST}:${PORT}/health`);
+    console.log(`📡 API 端点: http://${HOST}:${PORT}/api`);
+    console.log(`\n`);
+  });
+
+  // 监听服务器错误
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    console.error(`\n❌ 服务器启动失败！`);
+    console.error(`错误信息: ${error.message}`);
+    console.error(`错误代码: ${error.code}`);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`端口 ${PORT} 已被占用，请检查是否有其他进程在使用该端口`);
+    }
+    process.exit(1);
+  });
+
+  // 监听未捕获的异常
+  process.on('uncaughtException', (error: Error) => {
+    console.error(`\n❌ 未捕获的异常:`, error);
+    process.exit(1);
+  });
+
+  // 监听未处理的 Promise 拒绝
+  process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+    console.error(`\n❌ 未处理的 Promise 拒绝:`, reason);
+    process.exit(1);
+  });
+} catch (error) {
+  console.error(`\n❌ 应用启动时发生错误:`, error);
+  process.exit(1);
+}
 
 export default app;

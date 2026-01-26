@@ -55,9 +55,9 @@ RUN mkdir -p uploads
 # 暴露端口（Railway 会自动映射，这里使用环境变量 PORT）
 EXPOSE ${PORT:-3001}
 
-# 健康检查（使用环境变量 PORT）
+# 健康检查（容器内部使用 localhost，应用监听 0.0.0.0）
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3001) + '/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://127.0.0.1:' + (process.env.PORT || 3001) + '/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # 启动应用（先运行数据库迁移，再启动服务）
 # Railway 会自动设置 PORT 环境变量
