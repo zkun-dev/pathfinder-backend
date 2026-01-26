@@ -59,8 +59,12 @@ export const errorHandler = (
     return res.status(400).json({ error: '文件上传失败: ' + err.message });
   }
 
-  // JSON 解析错误
+  // JSON 解析错误（排除文件上传请求）
   if (err.name === 'SyntaxError' && err.message.includes('JSON')) {
+    // 如果是文件上传请求，返回更合适的错误信息
+    if (_req.path && _req.path.includes('/upload')) {
+      return res.status(400).json({ error: '文件上传失败，请检查文件格式' });
+    }
     return res.status(400).json({ error: '请求数据格式错误，请检查 JSON 格式' });
   }
 

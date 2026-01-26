@@ -54,8 +54,14 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-// 请求体解析
-app.use(express.json({ limit: '10mb' }));
+// 请求体解析（跳过文件上传请求）
+app.use((req, res, next) => {
+  // 如果是文件上传请求，跳过 JSON 解析
+  if (req.path.includes('/upload') && req.headers['content-type']?.includes('multipart/form-data')) {
+    return next();
+  }
+  express.json({ limit: '10mb' })(req, res, next);
+});
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 限流中间件（API 路由前）
