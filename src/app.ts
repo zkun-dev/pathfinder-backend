@@ -29,24 +29,41 @@ app.use(performanceMonitorMiddleware);
 // 安全头
 app.use(securityHeaders);
 
-// 中间件
+// CORS 配置
 app.use(cors({
   origin: (origin, callback) => {
     // 允许无origin的请求（如Postman、移动应用等）
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      logger.debug('CORS: 允许无origin请求');
+      return callback(null, true);
+    }
+    
+    logger.debug(`CORS: 收到请求，origin: ${origin}`);
     
     const allowedOrigins = Array.isArray(config.cors.origin) 
       ? config.cors.origin 
       : [config.cors.origin];
     
-    // 开发环境允许所有localhost端口
-    if (config.nodeEnv === 'development' && origin.startsWith('http://localhost:')) {
+    logger.debug(`CORS: 配置的允许源: ${JSON.stringify(allowedOrigins)}`);
+    
+    // 允许所有 localhost 端口（开发和生产环境都允许，方便本地测试）
+    if (origin.match(/^https?:\/\/localhost(:\d+)?$/)) {
+      logger.debug(`CORS: 匹配 localhost，允许: ${origin}`);
       return callback(null, true);
     }
     
+    // 允许所有 Railway 域名
+    if (origin.match(/^https:\/\/[\w-]+\.up\.railway\.app/)) {
+      logger.debug(`CORS: 匹配 Railway 域名，允许: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // 允许配置的源
     if (allowedOrigins.includes(origin)) {
+      logger.debug(`CORS: 匹配配置的源，允许: ${origin}`);
       callback(null, true);
     } else {
+      logger.warn(`CORS 请求被拒绝: ${origin}，允许的源: ${allowedOrigins.join(', ')}`);
       callback(new Error('不允许的CORS源'));
     }
   },
@@ -60,9 +77,9 @@ app.use((req, res, next) => {
   if (req.path.includes('/upload') && req.headers['content-type']?.includes('multipart/form-data')) {
     return next();
   }
-  express.json({ limit: '10mb' })(req, res, next);
+  express.json({ limit: config.upload.maxFileSize.toString() })(req, res, next);
 });
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: config.upload.maxFileSize.toString() }));
 
 // 限流中间件（API 路由前）
 app.use('/api', rateLimiter(100, 60000)); // 每分钟最多 100 次请求
@@ -91,8 +108,11 @@ app.use(errorHandler);
 // 启动服务器
 const PORT = config.port;
 app.listen(PORT, () => {
-  logger.info(`🚀 服务器运行在 http://localhost:${PORT}`);
-  logger.info(`环境: ${config.nodeEnv}`);
+  // 启动信息始终显示，无论环境如何
+  console.log(`\n🚀 服务器启动成功！`);
+  console.log(`📍 运行地址: http://localhost:${PORT}`);
+  console.log(`🌍 环境: ${config.nodeEnv}`);
+  console.log(`⏰ 启动时间: ${new Date().toLocaleString('zh-CN')}\n`);
 });
 
 export default app;

@@ -62,12 +62,30 @@ export const rateLimiter = (maxRequests: number = 100, windowMs: number = 60000)
 
 /**
  * 清理过期的限流记录（定期执行）
+ * 使用 WeakMap 或定期清理来防止内存泄漏
  */
-setInterval(() => {
+const CLEANUP_INTERVAL = 60000; // 每分钟清理一次
+
+const cleanupInterval = setInterval(() => {
   const now = Date.now();
+  const keysToDelete: string[] = [];
+  
   Object.keys(store).forEach(key => {
     if (store[key].resetTime < now) {
-      delete store[key];
+      keysToDelete.push(key);
     }
   });
-}, 60000); // 每分钟清理一次
+  
+  keysToDelete.forEach(key => {
+    delete store[key];
+  });
+  
+  if (keysToDelete.length > 0) {
+    logger.debug(`限流器清理: 删除了 ${keysToDelete.length} 条过期记录`);
+  }
+}, CLEANUP_INTERVAL);
+
+// 优雅关闭时清理定时器
+process.on('beforeExit', () => {
+  clearInterval(cleanupInterval);
+});

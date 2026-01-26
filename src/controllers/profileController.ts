@@ -11,7 +11,11 @@ const updateProfileSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   location: z.string().optional(),
-  socialLinks: z.any().optional(),
+  socialLinks: z.union([
+    z.array(z.record(z.unknown())),
+    z.record(z.unknown()),
+    z.null(),
+  ]).optional(),
 });
 
 /**

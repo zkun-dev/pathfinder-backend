@@ -46,17 +46,19 @@ export const errorHandler = (
   }
 
   // Multer 文件上传错误
-  if (err.message && (err.message.includes('文件') || err.message.includes('LIMIT') || err.message.includes('Multer') || err.name === 'MulterError')) {
-    if (err.message.includes('LIMIT_FILE_SIZE') || err.message.includes('File too large')) {
+  if (err.name === 'MulterError' || (err.message && (err.message.includes('文件') || err.message.includes('LIMIT') || err.message.includes('Multer')))) {
+    const multerError = err as { code?: string; message?: string; field?: string };
+    
+    if (multerError.code === 'LIMIT_FILE_SIZE' || err.message?.includes('File too large')) {
       return res.status(400).json({ error: '文件大小超过限制，请选择更小的文件' });
     }
-    if (err.message.includes('不支持的文件类型') || err.message.includes('File type')) {
+    if (err.message?.includes('不支持的文件类型') || err.message?.includes('File type')) {
       return res.status(400).json({ error: err.message });
     }
-    if (err.message.includes('Unexpected field')) {
-      return res.status(400).json({ error: '请使用字段名 "file" 上传文件' });
+    if (multerError.code === 'LIMIT_UNEXPECTED_FILE' || err.message?.includes('Unexpected field')) {
+      return res.status(400).json({ error: `请使用字段名 "${multerError.field || 'file'}" 上传文件` });
     }
-    return res.status(400).json({ error: '文件上传失败: ' + err.message });
+    return res.status(400).json({ error: `文件上传失败: ${multerError.message || err.message}` });
   }
 
   // JSON 解析错误（排除文件上传请求）

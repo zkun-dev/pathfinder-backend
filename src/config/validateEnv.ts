@@ -6,11 +6,11 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().regex(/^\d+$/).default('3001'),
-  DATABASE_URL: z.string().url().optional(),
+  DATABASE_URL: z.string().url('DATABASE_URL 必须是有效的 URL').optional(),
   JWT_SECRET: z.string().min(10, 'JWT_SECRET 至少需要 10 个字符').optional(),
   JWT_EXPIRES_IN: z.string().default('7d'),
   UPLOAD_DIR: z.string().default('./uploads'),
-  MAX_FILE_SIZE: z.string().regex(/^\d+$/).default('104857600'),
+  MAX_FILE_SIZE: z.string().regex(/^\d+$/, 'MAX_FILE_SIZE 必须是数字').default('10485760'), // 默认 10MB
   CORS_ORIGIN: z.string().optional(),
 });
 
