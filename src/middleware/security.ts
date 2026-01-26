@@ -13,7 +13,8 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
   // 生产环境添加更严格的安全头
   if (config.nodeEnv === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    res.setHeader('Content-Security-Policy', "default-src 'self'");
+    // 注意：不设置 Content-Security-Policy，因为它会阻止跨域请求
+    // 如果需要 CSP，应该设置为允许跨域：default-src 'self' *.up.railway.app;
   }
   
   next();

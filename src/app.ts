@@ -23,54 +23,89 @@ const app: express.Application = express();
 // 请求日志（最早添加，记录所有请求）
 app.use(requestLogger);
 
-// 性能监控
-app.use(performanceMonitorMiddleware);
-
-// 安全头
-app.use(securityHeaders);
-
-// CORS 配置
+// CORS 配置（必须在其他中间件之前，特别是安全头之前）
+// 这样可以确保预检请求（OPTIONS）能正确响应
 app.use(cors({
   origin: (origin, callback) => {
-    // 允许无origin的请求（如Postman、移动应用等）
+    // 允许无origin的请求（如Postman、移动应用、服务器端请求等）
     if (!origin) {
-      logger.debug('CORS: 允许无origin请求');
+      logger.info('CORS: 允许无origin请求');
       return callback(null, true);
     }
     
-    logger.debug(`CORS: 收到请求，origin: ${origin}`);
+    logger.info(`CORS: 收到请求，origin: ${origin}`);
     
+    // 允许所有 localhost 端口（开发和生产环境都允许，方便本地测试）
+    if (origin.match(/^https?:\/\/localhost(:\d+)?$/)) {
+      logger.info(`CORS: 匹配 localhost，允许: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // 允许所有 Railway 域名（匹配所有 .up.railway.app 域名）
+    // 使用 includes 检查，确保匹配所有 Railway 域名（包括带路径、端口等情况）
+    if (origin.includes('.up.railway.app')) {
+      logger.info(`CORS: 匹配 Railway 域名，允许: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // 允许配置的源（规范化比较，支持带或不带尾部斜杠）
     const allowedOrigins = Array.isArray(config.cors.origin) 
       ? config.cors.origin 
       : [config.cors.origin];
     
-    logger.debug(`CORS: 配置的允许源: ${JSON.stringify(allowedOrigins)}`);
+    logger.info(`CORS: 配置的允许源: ${JSON.stringify(allowedOrigins)}`);
     
-    // 允许所有 localhost 端口（开发和生产环境都允许，方便本地测试）
-    if (origin.match(/^https?:\/\/localhost(:\d+)?$/)) {
-      logger.debug(`CORS: 匹配 localhost，允许: ${origin}`);
-      return callback(null, true);
+    // 规范化 origin（移除尾部斜杠和路径）用于比较
+    // 只比较协议和域名部分
+    try {
+      const originUrl = new URL(origin);
+      const normalizedOrigin = `${originUrl.protocol}//${originUrl.host}`;
+      
+      const normalizedAllowedOrigins = allowedOrigins.map(o => {
+        try {
+          const allowedUrl = new URL(o);
+          return `${allowedUrl.protocol}//${allowedUrl.host}`;
+        } catch {
+          // 如果不是有效 URL，直接规范化
+          return o.replace(/\/$/, '');
+        }
+      });
+      
+      // 允许配置的源（规范化后比较，只比较协议和域名）
+      if (normalizedAllowedOrigins.includes(normalizedOrigin)) {
+        logger.info(`CORS: 匹配配置的源，允许: ${origin}`);
+        return callback(null, true);
+      }
+    } catch (error) {
+      // URL 解析失败，使用字符串比较
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      const normalizedAllowedOrigins = allowedOrigins.map(o => o.replace(/\/$/, ''));
+      
+      if (normalizedAllowedOrigins.includes(normalizedOrigin)) {
+        logger.info(`CORS: 匹配配置的源（字符串比较），允许: ${origin}`);
+        return callback(null, true);
+      }
     }
     
-    // 允许所有 Railway 域名
-    if (origin.match(/^https:\/\/[\w-]+\.up\.railway\.app/)) {
-      logger.debug(`CORS: 匹配 Railway 域名，允许: ${origin}`);
-      return callback(null, true);
-    }
-    
-    // 允许配置的源
-    if (allowedOrigins.includes(origin)) {
-      logger.debug(`CORS: 匹配配置的源，允许: ${origin}`);
-      callback(null, true);
-    } else {
-      logger.warn(`CORS 请求被拒绝: ${origin}，允许的源: ${allowedOrigins.join(', ')}`);
-      callback(new Error('不允许的CORS源'));
-    }
+    // 如果都不匹配，记录警告并拒绝
+    logger.warn(`CORS 请求被拒绝: ${origin}，允许的源: ${allowedOrigins.join(', ')}`);
+    callback(new Error('不允许的CORS源'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400, // 24小时
+  preflightContinue: false, // 立即响应预检请求，不继续传递
+  optionsSuccessStatus: 204, // 预检请求成功状态码
 }));
+
+// 性能监控
+app.use(performanceMonitorMiddleware);
+
+// 安全头（在 CORS 之后，避免干扰 CORS 预检请求）
+app.use(securityHeaders);
+
 // 请求体解析（跳过文件上传请求）
 app.use((req, res, next) => {
   // 如果是文件上传请求，跳过 JSON 解析
