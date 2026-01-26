@@ -20,7 +20,7 @@ const updateLifeSchema = createLifeSchema.partial();
 /**
  * 获取生活动态列表
  */
-export const getLifePosts = asyncHandler(async (req: Request, res: Response) => {
+export const getLifePosts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const pagination = parsePagination(req.query as Record<string, string>, 10, 100);
   const where = buildQueryConditions(req.query as Record<string, string>, {
     published: (value) => parseBoolean(value),
@@ -42,14 +42,15 @@ export const getLifePosts = asyncHandler(async (req: Request, res: Response) => 
 /**
  * 获取生活动态详情
  */
-export const getLifePost = asyncHandler(async (req: Request, res: Response) => {
+export const getLifePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const post = await prisma.life.findFirst({
     where: { id, deletedAt: null },
   });
 
   if (!post) {
-    return res.status(404).json({ error: '生活动态不存在' });
+    res.status(404).json({ error: '生活动态不存在' });
+    return;
   }
 
   // 增加阅读量
@@ -64,7 +65,7 @@ export const getLifePost = asyncHandler(async (req: Request, res: Response) => {
 /**
  * 创建生活动态
  */
-export const createLifePost = asyncHandler(async (req: Request, res: Response) => {
+export const createLifePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const data = createLifeSchema.parse(req.body);
   const post = await prisma.life.create({ data });
   res.status(201).json(post);
@@ -73,7 +74,7 @@ export const createLifePost = asyncHandler(async (req: Request, res: Response) =
 /**
  * 更新生活动态
  */
-export const updateLifePost = asyncHandler(async (req: Request, res: Response) => {
+export const updateLifePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const data = updateLifeSchema.parse(req.body);
   const post = await prisma.life.update({
@@ -86,7 +87,7 @@ export const updateLifePost = asyncHandler(async (req: Request, res: Response) =
 /**
  * 删除生活动态（软删除）
  */
-export const deleteLifePost = asyncHandler(async (req: Request, res: Response) => {
+export const deleteLifePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   await prisma.life.update({
     where: { id },

@@ -15,7 +15,7 @@ const loginSchema = z.object({
 /**
  * 用户登录
  */
-export const login = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const login = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const { username, password } = loginSchema.parse(req.body);
 
   const user = await prisma.user.findUnique({
@@ -23,12 +23,14 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response) => {
   });
 
   if (!user) {
-    return res.status(401).json({ error: '用户名或密码错误' });
+    res.status(401).json({ error: '用户名或密码错误' });
+    return;
   }
 
   const isValid = bcrypt.compareSync(password, user.password);
   if (!isValid) {
-    return res.status(401).json({ error: '用户名或密码错误' });
+    res.status(401).json({ error: '用户名或密码错误' });
+    return;
   }
 
   const token = generateToken(user.id);
@@ -42,11 +44,12 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response) => {
 /**
  * 获取当前用户信息
  */
-export const getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const getMe = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.userId;
 
   if (!userId) {
-    return res.status(401).json({ error: '未授权访问' });
+    res.status(401).json({ error: '未授权访问' });
+    return;
   }
 
   const user = await prisma.user.findUnique({
@@ -60,7 +63,8 @@ export const getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
   });
 
   if (!user) {
-    return res.status(404).json({ error: '用户不存在' });
+    res.status(404).json({ error: '用户不存在' });
+    return;
   }
 
   res.json(user);

@@ -24,7 +24,7 @@ const updateLearningSchema = createLearningSchema.partial();
 /**
  * 获取学习记录列表
  */
-export const getLearnings = asyncHandler(async (req: Request, res: Response) => {
+export const getLearnings = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const pagination = parsePagination(req.query as Record<string, string>, 10, 100);
   const where = buildQueryConditions(req.query as Record<string, string>);
 
@@ -44,14 +44,15 @@ export const getLearnings = asyncHandler(async (req: Request, res: Response) => 
 /**
  * 获取学习记录详情
  */
-export const getLearning = asyncHandler(async (req: Request, res: Response) => {
+export const getLearning = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const learning = await prisma.learning.findFirst({
     where: { id, deletedAt: null },
   });
 
   if (!learning) {
-    return res.status(404).json({ error: '学习记录不存在' });
+    res.status(404).json({ error: '学习记录不存在' });
+    return;
   }
 
   res.json(learning);
@@ -60,7 +61,7 @@ export const getLearning = asyncHandler(async (req: Request, res: Response) => {
 /**
  * 创建学习记录
  */
-export const createLearning = asyncHandler(async (req: Request, res: Response) => {
+export const createLearning = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const data = createLearningSchema.parse(req.body);
   const learningData = transformDateFields(data, ['startDate', 'endDate']);
   const learning = await prisma.learning.create({
@@ -72,7 +73,7 @@ export const createLearning = asyncHandler(async (req: Request, res: Response) =
 /**
  * 更新学习记录
  */
-export const updateLearning = asyncHandler(async (req: Request, res: Response) => {
+export const updateLearning = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const data = updateLearningSchema.parse(req.body);
   const learningData = transformDateFields(data, ['startDate', 'endDate']);
@@ -86,7 +87,7 @@ export const updateLearning = asyncHandler(async (req: Request, res: Response) =
 /**
  * 删除学习记录（软删除）
  */
-export const deleteLearning = asyncHandler(async (req: Request, res: Response) => {
+export const deleteLearning = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   await prisma.learning.update({
     where: { id },

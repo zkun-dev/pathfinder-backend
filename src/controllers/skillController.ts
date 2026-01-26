@@ -18,7 +18,7 @@ const updateSkillSchema = createSkillSchema.partial();
 /**
  * 获取技能列表
  */
-export const getSkills = asyncHandler(async (_req: Request, res: Response) => {
+export const getSkills = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
   const skills = await prisma.skill.findMany({
     orderBy: [
       { sortOrder: 'asc' },
@@ -32,7 +32,7 @@ export const getSkills = asyncHandler(async (_req: Request, res: Response) => {
 /**
  * 创建技能
  */
-export const createSkill = asyncHandler(async (req: Request, res: Response) => {
+export const createSkill = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const data = createSkillSchema.parse(req.body);
   const skill = await prisma.skill.create({ data });
   res.status(201).json(skill);
@@ -41,7 +41,7 @@ export const createSkill = asyncHandler(async (req: Request, res: Response) => {
 /**
  * 更新技能
  */
-export const updateSkill = asyncHandler(async (req: Request, res: Response) => {
+export const updateSkill = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const data = updateSkillSchema.parse(req.body);
   const skill = await prisma.skill.update({ where: { id }, data });
@@ -51,7 +51,7 @@ export const updateSkill = asyncHandler(async (req: Request, res: Response) => {
 /**
  * 删除技能
  */
-export const deleteSkill = asyncHandler(async (req: Request, res: Response) => {
+export const deleteSkill = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   await prisma.skill.delete({ where: { id } });
   res.json({ message: '删除成功' });

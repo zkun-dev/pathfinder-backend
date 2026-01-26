@@ -26,7 +26,7 @@ const updateProjectSchema = createProjectSchema.partial();
 /**
  * 获取项目列表
  */
-export const getProjects = asyncHandler(async (req: Request, res: Response) => {
+export const getProjects = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const pagination = parsePagination(req.query as Record<string, string>, 10, 100);
   const where = buildQueryConditions(req.query as Record<string, string>, {
     featured: (value) => value === 'true',
@@ -48,14 +48,15 @@ export const getProjects = asyncHandler(async (req: Request, res: Response) => {
 /**
  * 获取项目详情
  */
-export const getProject = asyncHandler(async (req: Request, res: Response) => {
+export const getProject = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const project = await prisma.project.findFirst({
     where: { id, deletedAt: null },
   });
 
   if (!project) {
-    return res.status(404).json({ error: '项目不存在' });
+    res.status(404).json({ error: '项目不存在' });
+    return;
   }
 
   res.json(project);
@@ -64,7 +65,7 @@ export const getProject = asyncHandler(async (req: Request, res: Response) => {
 /**
  * 创建项目
  */
-export const createProject = asyncHandler(async (req: Request, res: Response) => {
+export const createProject = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const data = createProjectSchema.parse(req.body);
   const projectData = transformDateFields(data, ['startDate', 'endDate']);
   const project = await prisma.project.create({
@@ -76,7 +77,7 @@ export const createProject = asyncHandler(async (req: Request, res: Response) =>
 /**
  * 更新项目
  */
-export const updateProject = asyncHandler(async (req: Request, res: Response) => {
+export const updateProject = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const data = updateProjectSchema.parse(req.body);
   const projectData = transformDateFields(data, ['startDate', 'endDate']);
@@ -90,7 +91,7 @@ export const updateProject = asyncHandler(async (req: Request, res: Response) =>
 /**
  * 删除项目（软删除）
  */
-export const deleteProject = asyncHandler(async (req: Request, res: Response) => {
+export const deleteProject = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   await prisma.project.update({
     where: { id },

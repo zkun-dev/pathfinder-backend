@@ -23,7 +23,7 @@ const updateExperienceSchema = createExperienceSchema.partial();
 /**
  * 获取工作经历列表
  */
-export const getExperiences = asyncHandler(async (_req: Request, res: Response) => {
+export const getExperiences = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
   const experiences = await prisma.experience.findMany({
     where: { deletedAt: null },
     orderBy: [
@@ -37,14 +37,15 @@ export const getExperiences = asyncHandler(async (_req: Request, res: Response) 
 /**
  * 获取工作经历详情
  */
-export const getExperience = asyncHandler(async (req: Request, res: Response) => {
+export const getExperience = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const experience = await prisma.experience.findFirst({
     where: { id, deletedAt: null },
   });
 
   if (!experience) {
-    return res.status(404).json({ error: '工作经历不存在' });
+    res.status(404).json({ error: '工作经历不存在' });
+    return;
   }
 
   res.json(experience);
@@ -53,7 +54,7 @@ export const getExperience = asyncHandler(async (req: Request, res: Response) =>
 /**
  * 创建工作经历
  */
-export const createExperience = asyncHandler(async (req: Request, res: Response) => {
+export const createExperience = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const data = createExperienceSchema.parse(req.body);
   const experienceData = transformDateFields(data, ['startDate', 'endDate']);
   const experience = await prisma.experience.create({
@@ -65,7 +66,7 @@ export const createExperience = asyncHandler(async (req: Request, res: Response)
 /**
  * 更新工作经历
  */
-export const updateExperience = asyncHandler(async (req: Request, res: Response) => {
+export const updateExperience = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   const data = updateExperienceSchema.parse(req.body);
   const experienceData = transformDateFields(data, ['startDate', 'endDate']);
@@ -79,7 +80,7 @@ export const updateExperience = asyncHandler(async (req: Request, res: Response)
 /**
  * 删除工作经历（软删除）
  */
-export const deleteExperience = asyncHandler(async (req: Request, res: Response) => {
+export const deleteExperience = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
   await prisma.experience.update({
     where: { id },
