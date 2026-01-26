@@ -6,10 +6,11 @@ import { logger } from '../utils/logger.js';
  */
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
-  const { method, originalUrl, ip } = req;
+  const { method, originalUrl, ip, headers } = req;
 
-  // 记录请求开始
-  logger.info(`${method} ${originalUrl}`, { ip });
+  // 记录请求开始（包括 origin 头，用于调试 CORS）
+  console.log(`[请求] ${method} ${originalUrl} - Origin: ${headers.origin || 'none'} - IP: ${ip}`);
+  logger.info(`${method} ${originalUrl}`, { ip, origin: headers.origin });
 
   // 监听响应完成
   res.on('finish', () => {

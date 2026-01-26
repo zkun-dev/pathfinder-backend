@@ -20,6 +20,12 @@ import uploadRoutes from './routes/uploadRoutes.js';
 
 const app: express.Application = express();
 
+// 健康检查路由（最前面，不受任何中间件影响，确保 Railway 健康检查能通过）
+app.get('/health', (_req, res) => {
+  console.log('Health check requested');
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // 请求日志（最早添加，记录所有请求）
 app.use(requestLogger);
 
@@ -100,6 +106,17 @@ app.use(cors({
   optionsSuccessStatus: 204, // 预检请求成功状态码
 }));
 
+// 手动处理 OPTIONS 预检请求（确保所有预检请求都能正确响应）
+app.options('*', (req, res) => {
+  logger.info(`CORS: 处理 OPTIONS 预检请求: ${req.method} ${req.path}`);
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
+  res.sendStatus(204);
+});
+
 // 性能监控
 app.use(performanceMonitorMiddleware);
 
@@ -132,20 +149,16 @@ app.use('/api/learnings', learningRoutes);
 app.use('/api/life', lifeRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// 健康检查
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 // 错误处理
 app.use(errorHandler);
 
 // 启动服务器
 const PORT = config.port;
-app.listen(PORT, () => {
+// 监听 0.0.0.0 而不是 localhost，这样 Railway 才能从外部访问
+app.listen(PORT, '0.0.0.0', () => {
   // 启动信息始终显示，无论环境如何
   console.log(`\n🚀 服务器启动成功！`);
-  console.log(`📍 运行地址: http://localhost:${PORT}`);
+  console.log(`📍 运行地址: http://0.0.0.0:${PORT}`);
   console.log(`🌍 环境: ${config.nodeEnv}`);
   console.log(`⏰ 启动时间: ${new Date().toLocaleString('zh-CN')}\n`);
 });
