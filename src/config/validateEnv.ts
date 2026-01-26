@@ -5,7 +5,8 @@ import { z } from 'zod';
  */
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().regex(/^\d+$/).default('3001'),
+  // PORT 在 Railway 中会自动设置，这里不验证，避免干扰
+  PORT: z.string().optional(),
   DATABASE_URL: z.string().url('DATABASE_URL 必须是有效的 URL').optional(),
   JWT_SECRET: z.string().min(10, 'JWT_SECRET 至少需要 10 个字符').optional(),
   JWT_EXPIRES_IN: z.string().default('7d'),
