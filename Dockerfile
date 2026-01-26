@@ -7,10 +7,13 @@ WORKDIR /app
 # 复制依赖文件
 COPY package.json pnpm-lock.yaml ./
 
+# 复制 Prisma schema（需要在安装依赖前复制，因为 postinstall 会运行 prisma generate）
+COPY prisma ./prisma
+
 # 安装 pnpm
 RUN npm install -g pnpm@latest
 
-# 安装依赖
+# 安装依赖（会触发 postinstall，需要 prisma schema）
 RUN pnpm install --frozen-lockfile
 
 # 复制源代码
