@@ -4,12 +4,14 @@ import { Request } from 'express';
 import { config } from '../config/index.js';
 import { FILE_UPLOAD } from './constants.js';
 import fs from 'fs';
+import { logger } from './logger.js';
 
 // 获取上传目录（确保目录存在）
 function getUploadDir(): string {
   const dir = config.upload.dir;
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+    logger.info(`创建上传目录: ${dir}`);
   }
   return dir;
 }
@@ -44,6 +46,7 @@ const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFil
   if (mimetype && extname) {
     return cb(null, true);
   } else {
+    logger.warn(`不支持的文件类型: ${file.mimetype} (${file.originalname})`);
     cb(new Error(`不支持的文件类型。允许的类型: ${ALLOWED_MIME_TYPES.join(', ')}`));
   }
 };

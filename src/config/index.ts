@@ -48,7 +48,7 @@ function getConfig(): AppConfig {
     },
     upload: {
       dir: process.env.UPLOAD_DIR || './uploads',
-      maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '104857600', 10), // 100MB
+      maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10), // 10MB (与常量一致)
     },
     cors: {
       origin: process.env.CORS_ORIGIN 
