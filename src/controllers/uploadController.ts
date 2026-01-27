@@ -30,17 +30,27 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response, _next
 
 /**
  * 删除上传的文件
+ * 支持通过路径参数或查询参数指定文件路径
  */
 export const deleteFile = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-  let filePath = req.path || (req.query.path as string) || '';
+  // 优先使用路径参数（/api/upload/uploads/filename.jpg），否则使用查询参数
+  let filePath = req.params[0] || (req.query.path as string) || '';
   
+  // 如果路径不以 /uploads/ 开头，尝试添加前缀
   if (!filePath.startsWith('/uploads/')) {
-    logger.warn(`无效的文件路径: ${filePath}`);
-    res.status(400).json({ error: '无效的文件路径，必须以 /uploads/ 开头' });
-    return;
+    if (filePath.startsWith('uploads/')) {
+      filePath = '/' + filePath;
+    } else if (filePath && !filePath.includes('/')) {
+      // 如果只是文件名，添加 /uploads/ 前缀
+      filePath = '/uploads/' + filePath;
+    } else {
+      logger.warn(`无效的文件路径: ${filePath}`);
+      res.status(400).json({ error: '无效的文件路径，必须指定 /uploads/ 下的文件' });
+      return;
+    }
   }
 
-  const filename = filePath.replace(/^\/uploads\//, '');
+  const filename = filePath.replace(/^\/uploads\//, '').replace(/^uploads\//, '');
   
   // 验证文件名，防止路径遍历攻击
   if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
@@ -70,8 +80,9 @@ export const deleteFile = asyncHandler(async (req: Request, res: Response, _next
     return;
   }
 
+  // 使用异步方法删除文件
   try {
-    fs.unlinkSync(fullPath);
+    await fs.promises.unlink(fullPath);
     logger.info(`文件删除成功: ${filename}`);
     res.json({ 
       message: '文件删除成功',

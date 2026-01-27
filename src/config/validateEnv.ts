@@ -2,10 +2,11 @@ import { z } from 'zod';
 
 /**
  * 环境变量验证模式
+ * 使用 Zod 进行类型安全的验证
  */
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  // PORT 在 Railway 中会自动设置，这里不验证，避免干扰
+  // Railway 会自动设置 PORT，这里不验证
   PORT: z.string().optional(),
   DATABASE_URL: z.string().url('DATABASE_URL 必须是有效的 URL').optional(),
   JWT_SECRET: z.string().min(10, 'JWT_SECRET 至少需要 10 个字符').optional(),
@@ -17,12 +18,14 @@ const envSchema = z.object({
 
 /**
  * 验证环境变量
- * 在开发环境中只警告，生产环境抛出错误
+ * - 开发环境：只警告，不中断启动
+ * - 生产环境：验证失败时抛出错误
  */
 export function validateEnv(): void {
   const nodeEnv = process.env.NODE_ENV || 'development';
   const isProduction = nodeEnv === 'production';
 
+  // 验证环境变量格式
   try {
     envSchema.parse(process.env);
   } catch (error) {

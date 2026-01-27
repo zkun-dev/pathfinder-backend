@@ -27,3 +27,29 @@ export function parseBoolean(value: string | undefined): boolean | undefined {
   if (value === undefined) return undefined;
   return value === 'true';
 }
+
+/**
+ * 验证日期字符串
+ * @param dateStr 日期字符串
+ * @returns 如果有效返回 Date 对象，否则返回 null
+ */
+export function parseDate(dateStr: string | undefined | null): Date | null {
+  if (!dateStr || dateStr === '') return null;
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * 验证 URL 字符串
+ * @param url URL 字符串
+ * @returns 如果有效返回 true，否则返回 false
+ */
+export function isValidUrl(url: string | undefined | null): boolean {
+  if (!url || url === '') return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}

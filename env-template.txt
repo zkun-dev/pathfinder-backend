@@ -1,20 +1,56 @@
-# 数据库配置
-# 请修改为你的MySQL连接信息
+# ============================================
+# PathFinder Backend 环境变量配置模板
+# ============================================
+# 复制此文件为 .env 并修改配置值
+# Railway 部署时，在 Railway Variables 中设置这些变量
+
+# ============================================
+# 数据库配置（必需）
+# ============================================
+# 本地开发：mysql://root:password@localhost:3306/pathfinder?schema=public
+# Railway：使用 ${{MySQL.MYSQL_URL}} 引用
 DATABASE_URL="mysql://root:password@localhost:3306/pathfinder?schema=public"
 
-# JWT配置
+# ============================================
+# JWT 配置（必需）
+# ============================================
+# 生产环境必须设置强密钥（至少32字符）
+# 使用 pnpm run generate-secret 生成
 JWT_SECRET=pathfinder-secret-key-change-in-production-2024
 JWT_EXPIRES_IN=7d
 
+# ============================================
 # 服务器配置
+# ============================================
+# Railway 会自动设置 PORT，本地开发时使用 3001
 PORT=3001
 NODE_ENV=development
 
+# ============================================
 # 文件上传配置
+# ============================================
+# 本地开发：./uploads
+# Railway 生产环境：/tmp/uploads（推荐）
 UPLOAD_DIR=./uploads
-MAX_FILE_SIZE=104857600
+# 最大文件大小（字节），默认 10MB = 10485760
+MAX_FILE_SIZE=10485760
 
-# CORS配置（多个源用逗号分隔）
-# Railway 部署时，前端地址会自动匹配 *.up.railway.app 域名
+# ============================================
+# CORS 配置（可选）
+# ============================================
+# 多个源用逗号分隔
+# Railway 部署时，*.up.railway.app 域名会自动允许
 # 本地开发时，localhost 会自动允许
+# 生产环境可以不设置，代码会自动匹配 Railway 域名
 CORS_ORIGIN=http://localhost:3000
+
+# ============================================
+# 管理员账号配置（可选）
+# ============================================
+# 部署时自动创建管理员账号（如果不存在）
+# 如果已存在同名用户，会跳过创建
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+ADMIN_EMAIL=admin@example.com
+# 设置为 true 可以跳过自动创建管理员
+ADMIN_SKIP_CREATE=false

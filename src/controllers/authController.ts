@@ -27,7 +27,8 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response): Promi
     return;
   }
 
-  const isValid = bcrypt.compareSync(password, user.password);
+  // 使用异步方法进行密码验证，提高性能
+  const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
     res.status(401).json({ error: '用户名或密码错误' });
     return;

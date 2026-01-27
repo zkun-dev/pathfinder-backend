@@ -28,7 +28,6 @@
     "check-env": "node scripts/check-env.js",
     "test-db": "node scripts/test-db-connection.js",
     "generate-secret": "node scripts/generate-secret.js",
-    "deploy": "prisma migrate deploy && node dist/app.js",
     "postinstall": "prisma generate"
   },
   "keywords": [],
@@ -37,7 +36,6 @@
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "bcryptjs": "^3.0.3",
-    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.22.1",
     "iconv-lite": "^0.6.3",
@@ -46,7 +44,6 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/multer": "1.4.13",

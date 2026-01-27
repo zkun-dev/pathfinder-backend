@@ -53,10 +53,15 @@ export const getLifePost = asyncHandler(async (req: Request, res: Response): Pro
     return;
   }
 
-  // 增加阅读量
-  const updated = await prisma.life.update({
+  // 使用 updateMany 原子性增加阅读量，避免并发问题
+  await prisma.life.updateMany({
     where: { id: post.id },
     data: { views: { increment: 1 } },
+  });
+
+  // 重新获取更新后的数据
+  const updated = await prisma.life.findUnique({
+    where: { id: post.id },
   });
 
   res.json(updated);
@@ -76,6 +81,17 @@ export const createLifePost = asyncHandler(async (req: Request, res: Response): 
  */
 export const updateLifePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查生活动态是否存在且未被删除
+  const existing = await prisma.life.findFirst({
+    where: { id, deletedAt: null },
+  });
+  
+  if (!existing) {
+    res.status(404).json({ error: '生活动态不存在或已被删除' });
+    return;
+  }
+  
   const data = updateLifeSchema.parse(req.body);
   const post = await prisma.life.update({
     where: { id },
@@ -89,6 +105,17 @@ export const updateLifePost = asyncHandler(async (req: Request, res: Response): 
  */
 export const deleteLifePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查生活动态是否存在且未被删除
+  const existing = await prisma.life.findFirst({
+    where: { id, deletedAt: null },
+  });
+  
+  if (!existing) {
+    res.status(404).json({ error: '生活动态不存在或已被删除' });
+    return;
+  }
+  
   await prisma.life.update({
     where: { id },
     data: { deletedAt: new Date() },

@@ -75,6 +75,17 @@ export const createLearning = asyncHandler(async (req: Request, res: Response): 
  */
 export const updateLearning = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查学习记录是否存在且未被删除
+  const existing = await prisma.learning.findFirst({
+    where: { id, deletedAt: null },
+  });
+  
+  if (!existing) {
+    res.status(404).json({ error: '学习记录不存在或已被删除' });
+    return;
+  }
+  
   const data = updateLearningSchema.parse(req.body);
   const learningData = transformDateFields(data, ['startDate', 'endDate']);
   const learning = await prisma.learning.update({
@@ -89,6 +100,17 @@ export const updateLearning = asyncHandler(async (req: Request, res: Response): 
  */
 export const deleteLearning = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查学习记录是否存在且未被删除
+  const existing = await prisma.learning.findFirst({
+    where: { id, deletedAt: null },
+  });
+  
+  if (!existing) {
+    res.status(404).json({ error: '学习记录不存在或已被删除' });
+    return;
+  }
+  
   await prisma.learning.update({
     where: { id },
     data: { deletedAt: new Date() },

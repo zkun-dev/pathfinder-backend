@@ -11,8 +11,8 @@ const createExperienceSchema = z.object({
   position: z.string().min(1, '职位不能为空'),
   description: z.string().optional(),
   content: z.string().optional(),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime().optional().or(z.literal('')),
+  startDate: z.string().datetime('开始日期格式不正确'),
+  endDate: z.string().datetime().optional().or(z.literal('')), // 空字符串表示当前工作
   achievements: z.any().optional(),
   techStack: z.any().optional(),
   sortOrder: z.number().optional(),
@@ -68,6 +68,17 @@ export const createExperience = asyncHandler(async (req: Request, res: Response)
  */
 export const updateExperience = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查工作经历是否存在且未被删除
+  const existing = await prisma.experience.findFirst({
+    where: { id, deletedAt: null },
+  });
+  
+  if (!existing) {
+    res.status(404).json({ error: '工作经历不存在或已被删除' });
+    return;
+  }
+  
   const data = updateExperienceSchema.parse(req.body);
   const experienceData = transformDateFields(data, ['startDate', 'endDate']);
   const experience = await prisma.experience.update({
@@ -82,6 +93,17 @@ export const updateExperience = asyncHandler(async (req: Request, res: Response)
  */
 export const deleteExperience = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查工作经历是否存在且未被删除
+  const existing = await prisma.experience.findFirst({
+    where: { id, deletedAt: null },
+  });
+  
+  if (!existing) {
+    res.status(404).json({ error: '工作经历不存在或已被删除' });
+    return;
+  }
+  
   await prisma.experience.update({
     where: { id },
     data: { deletedAt: new Date() },

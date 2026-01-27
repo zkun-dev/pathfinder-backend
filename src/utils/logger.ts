@@ -22,8 +22,6 @@ class Logger {
         console.log(this.formatMessage('info', message));
       }
     }
-    // args 参数用于扩展，即使未使用也保留
-    void args;
   }
 
   warn(message: string, ...args: unknown[]): void {

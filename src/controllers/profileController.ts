@@ -44,34 +44,26 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response): P
   let profile = await prisma.profile.findFirst();
 
   if (profile) {
-    // 处理 socialLinks，转换为 Prisma 接受的格式
-    const updateData: Record<string, unknown> = { ...data };
-    if ('socialLinks' in updateData) {
-      if (updateData.socialLinks === null) {
-        // Prisma 使用 Prisma.JsonNull 表示 JSON null
-        updateData.socialLinks = null;
-      } else if (updateData.socialLinks !== undefined) {
-        // 保持原值
-        updateData.socialLinks = updateData.socialLinks;
-      }
-    }
-
+    // 更新现有配置
     profile = await prisma.profile.update({
       where: { id: profile.id },
-      data: updateData as Parameters<typeof prisma.profile.update>[0]['data'],
+      data: {
+        ...data,
+        // 处理空字符串，转换为 null
+        email: data.email === '' ? null : data.email,
+        avatarUrl: data.avatarUrl === '' ? null : data.avatarUrl,
+      },
     });
   } else {
-    const createData: Record<string, unknown> = {
-      name: data.name || '未设置',
-      title: data.title || '未设置',
-      ...data,
-    };
-    if ('socialLinks' in createData && createData.socialLinks === null) {
-      createData.socialLinks = null;
-    }
-
+    // 创建新配置
     profile = await prisma.profile.create({
-      data: createData as Parameters<typeof prisma.profile.create>[0]['data'],
+      data: {
+        name: data.name || '未设置',
+        title: data.title || '未设置',
+        ...data,
+        email: data.email === '' ? null : data.email,
+        avatarUrl: data.avatarUrl === '' ? null : data.avatarUrl,
+      },
     });
   }
 

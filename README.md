@@ -2,15 +2,22 @@
 
 PathFinder 个人成长网站的后端 API 服务，基于 Node.js + Express + TypeScript + Prisma + MySQL。
 
-## 🚀 快速开始
+## 🚀 本地启动快速开始
 
-### 1. 安装依赖
+### 1. 克隆项目
+
+```bash
+git clone <your-repository-url>
+cd pathfinder-backend
+```
+
+### 2. 安装依赖
 
 ```bash
 pnpm install
 ```
 
-### 2. 配置环境变量
+### 3. 配置环境变量
 
 复制 `env-template.txt` 为 `.env` 并修改配置：
 
@@ -25,7 +32,7 @@ MAX_FILE_SIZE=5242880
 CORS_ORIGIN=http://localhost:3000
 ```
 
-### 3. 初始化数据库
+### 4. 初始化数据库
 
 ```bash
 # 生成 Prisma 客户端
@@ -250,13 +257,21 @@ pnpm run test-db              # 测试数据库连接
 pnpm run generate-secret      # 生成 JWT Secret
 ```
 
-## 📦 部署到 Railway
+## 📦 部署指南（Railway）
 
-### Railway 部署
+### 快速开始
 
-本项目使用 Railway 进行部署，支持自动部署和统一管理。
+本项目支持 Railway 云部署和本地部署两种方式。
 
-**详细部署指南**：查看 [Railway-完整部署指南.md](../Railway-完整部署指南.md)
+**📖 完整部署指南**：查看 [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+该指南包含：
+- Railway 云部署详细步骤
+- 本地部署完整流程
+- 数据库配置说明
+- 环境变量配置清单
+- 部署后验证方法
+- 常见问题排查
 
 ### 环境变量清单
 

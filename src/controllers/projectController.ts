@@ -79,6 +79,17 @@ export const createProject = asyncHandler(async (req: Request, res: Response): P
  */
 export const updateProject = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查项目是否存在且未被删除
+  const existing = await prisma.project.findFirst({
+    where: { id, deletedAt: null },
+  });
+  
+  if (!existing) {
+    res.status(404).json({ error: '项目不存在或已被删除' });
+    return;
+  }
+  
   const data = updateProjectSchema.parse(req.body);
   const projectData = transformDateFields(data, ['startDate', 'endDate']);
   const project = await prisma.project.update({
@@ -93,6 +104,17 @@ export const updateProject = asyncHandler(async (req: Request, res: Response): P
  */
 export const deleteProject = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查项目是否存在且未被删除
+  const existing = await prisma.project.findFirst({
+    where: { id, deletedAt: null },
+  });
+  
+  if (!existing) {
+    res.status(404).json({ error: '项目不存在或已被删除' });
+    return;
+  }
+  
   await prisma.project.update({
     where: { id },
     data: { deletedAt: new Date() },

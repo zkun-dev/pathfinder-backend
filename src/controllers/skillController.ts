@@ -43,6 +43,14 @@ export const createSkill = asyncHandler(async (req: Request, res: Response): Pro
  */
 export const updateSkill = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查技能是否存在
+  const existing = await prisma.skill.findUnique({ where: { id } });
+  if (!existing) {
+    res.status(404).json({ error: '技能不存在' });
+    return;
+  }
+  
   const data = updateSkillSchema.parse(req.body);
   const skill = await prisma.skill.update({ where: { id }, data });
   res.json(skill);
@@ -53,6 +61,14 @@ export const updateSkill = asyncHandler(async (req: Request, res: Response): Pro
  */
 export const deleteSkill = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const id = validateId(req.params.id);
+  
+  // 检查技能是否存在
+  const existing = await prisma.skill.findUnique({ where: { id } });
+  if (!existing) {
+    res.status(404).json({ error: '技能不存在' });
+    return;
+  }
+  
   await prisma.skill.delete({ where: { id } });
   res.json({ message: '删除成功' });
 });
