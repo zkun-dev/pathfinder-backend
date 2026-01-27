@@ -39,6 +39,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=builder /app/scripts ./scripts
 
 # 创建上传目录（Railway 使用 /tmp/uploads，但保留此步骤以防需要）
 RUN mkdir -p uploads
