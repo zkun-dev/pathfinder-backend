@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database.js';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
@@ -43,16 +44,38 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response): P
   const data = updateProfileSchema.parse(req.body);
   let profile = await prisma.profile.findFirst();
 
+  // 准备更新数据，正确处理 JSON 字段和 null 值
+  const updateData: {
+    name?: string;
+    title?: string;
+    bio?: string | null;
+    avatarUrl?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    location?: string | null;
+    socialLinks?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
+  } = {
+    ...(data.name && { name: data.name }),
+    ...(data.title !== undefined && { title: data.title }),
+    ...(data.bio !== undefined && { bio: data.bio || null }),
+    ...(data.phone !== undefined && { phone: data.phone || null }),
+    ...(data.location !== undefined && { location: data.location || null }),
+    // 处理空字符串，转换为 null
+    email: data.email === '' ? null : data.email,
+    avatarUrl: data.avatarUrl === '' ? null : data.avatarUrl,
+    // 处理 socialLinks：null 转换为 Prisma.JsonNull，其他值直接传递
+    socialLinks: data.socialLinks === null 
+      ? Prisma.JsonNull 
+      : data.socialLinks !== undefined 
+        ? (data.socialLinks as Prisma.InputJsonValue)
+        : undefined,
+  };
+
   if (profile) {
     // 更新现有配置
     profile = await prisma.profile.update({
       where: { id: profile.id },
-      data: {
-        ...data,
-        // 处理空字符串，转换为 null
-        email: data.email === '' ? null : data.email,
-        avatarUrl: data.avatarUrl === '' ? null : data.avatarUrl,
-      },
+      data: updateData,
     });
   } else {
     // 创建新配置
@@ -60,9 +83,7 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response): P
       data: {
         name: data.name || '未设置',
         title: data.title || '未设置',
-        ...data,
-        email: data.email === '' ? null : data.email,
-        avatarUrl: data.avatarUrl === '' ? null : data.avatarUrl,
+        ...updateData,
       },
     });
   }

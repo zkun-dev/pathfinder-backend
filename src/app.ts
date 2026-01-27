@@ -41,6 +41,16 @@ app.get('/', (_req, res) => {
 // ============================================
 // 全局中间件（按顺序执行）
 // ============================================
+// 0. 最基础的请求拦截器（用于调试）- 在所有路由和中间件之前
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`\n[RAW] ${timestamp} ${req.method} ${req.url}`);
+  console.log(`[RAW] Origin: ${req.headers.origin || 'none'}`);
+  console.log(`[RAW] Host: ${req.headers.host || 'none'}`);
+  console.log(`[RAW] User-Agent: ${req.headers['user-agent']?.substring(0, 60) || 'none'}...`);
+  next();
+});
+
 // 1. 请求日志 - 记录所有请求
 app.use(requestLogger);
 
@@ -93,9 +103,10 @@ app.use(errorHandler);
 // Railway 会自动设置 PORT 环境变量
 const PORT = parseInt(process.env.PORT || '3001', 10);
 // 监听地址：服务器绑定的网络接口（内部地址）
-// - 开发环境：localhost（只允许本地访问）
+// - 开发环境：0.0.0.0（允许所有网络接口，包括来自浏览器的请求）
 // - 生产环境：0.0.0.0（允许所有网络接口，Railway 路由层需要）
-const HOST = config.nodeEnv === 'production' ? '0.0.0.0' : 'localhost';
+// 注意：使用 0.0.0.0 而不是 localhost，确保浏览器请求能正确到达
+const HOST = '0.0.0.0';
 
 // 启动服务器
 try {
