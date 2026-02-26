@@ -103,16 +103,18 @@ app.use(errorHandler);
 // Railway 会自动设置 PORT 环境变量
 const PORT = parseInt(process.env.PORT || '3001', 10);
 // 监听地址：服务器绑定的网络接口（内部地址）
-// - 开发环境：0.0.0.0（允许所有网络接口，包括来自浏览器的请求）
-// - 生产环境：0.0.0.0（允许所有网络接口，Railway 路由层需要）
-// 注意：使用 0.0.0.0 而不是 localhost，确保浏览器请求能正确到达
-const HOST = '0.0.0.0';
+// - 开发环境：localhost（只在本机可访问，便于调试）
+// - 生产环境：0.0.0.0（允许所有网络接口，Railway/云平台路由层需要）
+// 使用环境变量 HOST 可以覆盖，默认根据 NODE_ENV 自动设置
+const HOST = process.env.HOST || (config.nodeEnv === 'development' ? 'localhost' : '0.0.0.0');
 
 // 启动服务器
 try {
   const server = app.listen(PORT, HOST, () => {
     console.log(`\n🚀 服务器启动成功！`);
-    console.log(`📍 访问地址: http://${HOST}:${PORT}`);
+    // 如果绑定到 0.0.0.0，则在日志中显示 localhost 以便开发者直接在浏览器中访问
+  const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
+  console.log(`📍 访问地址: http://${displayHost}:${PORT}`);
     console.log(`🌍 环境: ${config.nodeEnv}`);
     console.log(`⏰ 启动时间: ${new Date().toLocaleString('zh-CN')}`);
   });
